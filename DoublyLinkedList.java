@@ -1,6 +1,6 @@
 public class DoublyLinkedList implements LinkedList{
     private Node2P head,tail;
-    int size=0;
+    private int size=0;
 
     public DoublyLinkedList(){
         head = tail = null;
@@ -14,135 +14,149 @@ public class DoublyLinkedList implements LinkedList{
         return size;
     }
 
+    // O(1)
     public void addFirst(Object inputData){
         Node2P baru = new Node2P(inputData);
         if (isEmpty()){
-            head = baru;
-            tail = baru;
-            size++;
+            head = tail = baru;
         }
         else{
             baru.next = head;
             head.prev = baru;
             head = baru;
-            size++;
         }
+        size++;
     }
+
+    // O(1)
     public void addLast(Object inputData){
         Node2P baru = new Node2P(inputData);
         if (isEmpty()){
-            head = baru;
-            tail = baru;
-            size++;
+            head = tail = baru;
         }
         else{
             tail.next = baru;
             baru.prev = tail;
             tail = baru;
-            size++;
         }
+        size++;
     }
 
+    // Menyisipkan data setelah node pada index ke-i
     public void addAfter(int index,Object inputData){
-        Node2P baru = new Node2P(inputData);
         if (isEmpty()){
-            head = baru;
-            tail = baru;
-            size++;
+            addFirst(inputData);
         }
-        else{
-            Node2P temp = head;
-            for(int i=0;i<index;i++){
-                temp = temp.next;
-            }
-            baru.prev = temp;
-            baru.next = temp.next;
-            temp.next = baru;
-            baru.next.prev = baru;
-            size++;
-        }
-    }
-    
-    public void deleteFirst(){
-        Node2P temp = head;
-        if (!isEmpty()){ 
-            if (head == tail)
-                head = tail = null;
-            else
-            {
-                head.next.prev = null;
-                head = temp.next;
-            } size--;
-        }
-        else
-            System.out.println("List kosong!");
-    }
-
-    public void deleteLast(){
-        Node2P temp = tail;
-        if (!isEmpty()){
-            if (tail == head){
-                head = tail = null;
-            }
-            else {
-                tail.prev.next = null;
-                tail=temp.prev;
-            } size--;
-        }
-        else System.out.println("List kosong!");
-
-    }
-    public void deleteAfter(int index){
-        Node2P temp = head;
-        if(index < size-2){
-            for(int i=0;i<index;i++){
-                temp = temp.next;
-            }
-            temp.next.next.prev = temp;
-            temp.next = temp.next.next;
-            size--;
-        }
-        else if(index==size-2){//menghapus tail
-            this.deleteLast();
-        }
-        else{
+        else if (index < 0 || index >= size){
             System.out.println("Index lebih besar atau sama dari ukuran list");
         }
-
-    }
-
-
-    public void print(){
-        Node2P currentNode = head;
-        for(int i =0;i<size;i++){
-            System.out.println(currentNode.data);
-            currentNode = currentNode.next;
+        else if (index == size-1){
+            addLast(inputData);
+        }
+        else{
+            Node2P temp = nodeAt(index);
+            Node2P baru = new Node2P(inputData);
+            baru.prev = temp;
+            baru.next = temp.next;
+            temp.next.prev = baru;
+            temp.next = baru;
+            size++;
         }
     }
 
+    // O(1)
+    public void deleteFirst(){
+        if (isEmpty()){
+            System.out.println("List kosong!");
+            return;
+        }
+        unlink(head);
+    }
+
+    // O(1) berkat pointer prev
+    public void deleteLast(){
+        if (isEmpty()){
+            System.out.println("List kosong!");
+            return;
+        }
+        unlink(tail);
+    }
+
+    // Menghapus node yang berada setelah node pada index ke-i
+    public void deleteAfter(int index){
+        if (index < 0 || index >= size-1){
+            System.out.println("Index lebih besar atau sama dari ukuran list");
+            return;
+        }
+        unlink(nodeAt(index).next);
+    }
+
+    public void print(){
+        for (Node2P cur = head; cur != null; cur = cur.next){
+            System.out.println(cur.data);
+        }
+    }
     @Override
     public Object get(int index) {
-        // TODO digunakan untuk mengembalikan data pada index ke-i dimulai dari head. Head memiliki index 0
-        return null;
+        if (index < 0 || index >= size) {
+            throw new IndexOutOfBoundsException("Index: " + index + ", Size: " + size);
+        }
+        return nodeAt(index).data;
     }
     @Override
     public int indexOf(Object targetData) {
-        // TODO digunakan mencari kemunculan pertama targetData pada linked list dan mengembalikan indeksnya. Indeks dari head adalah 0. Jika tidak ada targetData pada linked list, kembalikan nilai -1 
-        return 0;
+        int index = 0;
+        for (Node2P cur = head; cur != null; cur = cur.next, index++) {
+            if (java.util.Objects.equals(cur.data, targetData)) {
+                return index;
+            }
+        }
+        return -1;
     }
     @Override
     public void printReverse() {
-        // TODO digunakan untuk mencetak data pada linked list dengan urutan terbalik, dari tail ke head.
-        
+        for (Node2P cur = tail; cur != null; cur = cur.prev) {
+            System.out.println(cur.data);
+        }
     }
     @Override
     public boolean remove(Object targetData) {
-        // TODO digunakan untuk mencari dan menghapus node dengan data=targetData pada linked list serta mengembalikan nilai True jika berhasil, dan False jika targetData tidak ada di linkedList
+        for (Node2P cur = head; cur != null; cur = cur.next) {
+            if (java.util.Objects.equals(cur.data, targetData)) {
+                unlink(cur);
+                return true;
+            }
+        }
         return false;
     }
     @Override
     public Object[] toArray() {
-        // TODO digunakan untuk mendapatkan keseluruhan data pada node-node di linked list dalam bentuk array. Data-data pada array disusun secara urut mulai dari head sampai dengan tail.
-        return null;
+        Object[] result = new Object[size];
+        int i = 0;
+        for (Node2P cur = head; cur != null; cur = cur.next) {
+            result[i++] = cur.data;
+        }
+        return result;
+    }
+    private Node2P nodeAt(int index) {
+        Node2P cur;
+        if (index < size / 2) {
+            cur = head;
+            for (int i = 0; i < index; i++) cur = cur.next;
+        } else {
+            cur = tail;
+            for (int i = size - 1; i > index; i--) cur = cur.prev;
+        }
+        return cur;
+    }
+    private void unlink(Node2P node) {
+        if (node.prev == null) head = node.next;
+        else node.prev.next = node.next;
+
+        if (node.next == null) tail = node.prev;
+        else node.next.prev = node.prev;
+
+        node.prev = node.next = null;
+        size--;
     }
 }
